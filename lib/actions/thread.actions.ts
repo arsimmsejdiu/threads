@@ -45,3 +45,37 @@ export async function createThread({text, author, communityId, path}: Params) {
         throw new Error(`Error creating thread: ${error.message}`)
     }
 }
+
+export async function fetchPosts(pageNumber = 1, pageSize = 20) {
+    try {
+      connectToDB();
+
+      // Calculate the number of posts to skip 
+      const skipAmount = (pageNumber - 1) * pageSize;
+
+      // Fetch posts that has no parents (top-level threads ... ) we don't want to find comments only real threads
+      const postsQuery = Thread.find({ parentId: { $in: [null, undefined] }})
+        .sort({createdAt: "desc"})
+        .skip(skipAmount)
+        .limit(pageSize)
+        .populate({ path: "author", model: User})
+        .populate({
+             path: "children",
+             populate: {
+                path: "author",
+                model: User,
+                select: "_id name parentId image"
+             }
+        }) // diving into recurtion
+
+        const totalPostCount = await Thread.countDocuments({ parentId: { $in: [null, undefined]}}) // we get only the top threads(only parents and not the coments)
+
+        const posts = await postsQuery.exec();
+
+        const isNext = totalPostCount > skipAmount + posts.length;// means that we do have a next page
+
+        return {posts, isNext}
+    } catch (error: any) {
+        throw new Error(`Error fetching threads: ${error.message}`);
+    }
+}
