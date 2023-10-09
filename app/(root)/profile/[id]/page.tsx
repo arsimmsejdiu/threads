@@ -5,6 +5,7 @@ import ProfileHeader from "@/components/shared/ProfileHeader";
 import { Tabs, TabsList, TabsContent, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileTabsProps, profileTabs } from "@/constants";
 import Image from "next/image";
+import ThreadsTab from "@/components/ui/ThreadsTab";
 
 const Page = async ({ params }: { params: { id: string } }) => {
   const user = await currentUser();
@@ -46,7 +47,11 @@ const Page = async ({ params }: { params: { id: string } }) => {
           </TabsList>
           {profileTabs.map((tab: ProfileTabsProps) => (
             <TabsContent key={`content-${tab.label}`} value={tab.value} className="w-full text-light-1">
-
+              <ThreadsTab 
+                currentUserId={user.id}
+                accountId={userInfo.id}
+                accountType="User"
+              />
             </TabsContent>
           ))}
         </Tabs>
